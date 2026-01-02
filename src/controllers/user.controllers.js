@@ -5,6 +5,17 @@ import { asyncHandler } from '../utils/asyncHandler.js';
 import { uploadOnCloudinary } from '../utils/cloudinary.js';
 
 const registerUser = asyncHandler(async (req, res) => {
+  //   STEPS :-
+  // Request se username, email, fullname, password lena
+  // Check karna koi field empty to nahi
+  // Database me check karna user already exist to nahi
+  // Avatar & cover image ke local paths lena
+  // Avatar compulsory hai – verify karna
+  // Cloudinary pe files upload karna
+  // Database me new user create karna
+  // Password & sensitive fields hata kar user lana
+  // Success response bhejna
+
   const { username, email, fullName, password } = req.body;
 
   if (
