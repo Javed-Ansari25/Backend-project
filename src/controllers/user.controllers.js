@@ -3,6 +3,8 @@ import { ApiError } from '../utils/ApiError.js';
 import { ApiResponse } from '../utils/ApiResponse.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { uploadOnCloudinary } from '../utils/cloudinary.js';
+import deleteLocalFile from '../utils/deleteLocalFile.js';
+import fs from "fs";
 import jtw from "jsonwebtoken";
 
 const generateAccessAndRefreshToken = async (userId) => {
@@ -174,7 +176,6 @@ const logoutUser = asyncHandler(async (req, res) => {
     .clearCookie("refreshToken", options)
     .json(new ApiResponse(200, {}, "User logout successfully"));
 })
-
 // ReGenerate tokens
 const refreshAccessToken = asyncHandler(async (req, res) => {
   // STEPS :-
@@ -226,5 +227,120 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
   }
 })
 
-export { registerUser, loginUser, logoutUser, refreshAccessToken };
+const changeCurrentPassword = asyncHandler(async (req, res) => {
+  const {oldPAssword, newPassword, conformPassword} = req.body;
 
+  if(!(newPassword === conformPassword)) {
+    throw new ApiError(201, "Password is not conform");
+  }
+
+  const user = await User.findById(req.user?._id);
+  const isPasswordCorrect = await user.isPasswordCorrect(oldPAssword);
+
+  if(!isPasswordCorrect) {
+    throw new ApiError(400, "Password is incorrect");
+  }
+
+  user.password = newPassword;
+  await user.save({validateBeforeSave : false});
+
+  return res.status(200).json(
+    new ApiResponse(200, {}, "Password is correct")
+  )
+
+})
+
+const getCurrentUser = asyncHandler(async(req, res) => {
+  return res.status(200).json(new ApiResponse(200, req.user, "Current user fetched successfully"))
+})
+
+const changeUserDetails = asyncHandler(async(req, res) => {
+  const {fullName, email} = req.body;
+  if(!fullName || !email) {
+    throw new ApiError(201, "All field are require")
+  }
+
+  const user = await User.findByIdAndUpdate(
+    req.user?._id,
+    {
+      $set: {
+        fullName,
+        email
+      }
+    },
+    {
+      new : true
+    }
+  ).select("-password")
+
+  return res.status(200).json(
+    new ApiResponse(200, user, "Account details update successfully")
+  )
+})
+
+const updateAvatar = asyncHandler(async(req, res) => {
+  const avatarLocalPath = req.file?.path;
+  if(!avatarLocalPath) {
+    throw new ApiError(400, "Avatar file is messing")
+  }
+
+  const avatar = await uploadOnCloudinary(avatarLocalPath);
+  if(!avatar?.url) {
+    throw new ApiError(400, "Error on while upload time")
+  }
+  // delete local file
+  fs.unlinkSync(avatarLocalPath);
+
+  const user = await User.findByIdAndUpdate(
+    req.user?._id,
+    {
+      $set: {
+        avatar: avatar.url
+      }
+    },
+    {
+      new: true
+    }
+  ).select("-password -refreshToken")
+
+  return res.status(200).json(
+    new ApiResponse(200, user, "Avatar file update successfully")
+  )
+})
+
+const updateCoverImage = asyncHandler(async(req, res) => {
+  const coverImageLocalPath = req.file?.path;
+  if(!coverImageLocalPath) {
+    throw new ApiError(400, "coverImage image file is messing")
+  }
+
+  const coverImage = await uploadOnCloudinary(coverImageLocalPath);
+  if(!coverImage?.url) {
+    throw new ApiError(400, "Error on while upload time")
+  }
+  // delete local file
+  deleteLocalFile(avatarLocalPath);
+
+  const user = await User.findByIdAndUpdate(
+    req.user?._id,
+    {
+      $set: {
+        coverImage: coverImage.url
+      }
+    },
+    {
+      new: true
+    }
+  ).select("-password -refreshToken")
+
+  return res.status(200).json(
+    new ApiResponse(200, user, "coverImage file update successfully")
+  )
+})
+
+
+export { 
+  registerUser, loginUser, logoutUser, refreshAccessToken, changeCurrentPassword,
+  getCurrentUser, changeUserDetails, updateAvatar, updateCoverImage 
+};
+ 
