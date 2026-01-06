@@ -228,14 +228,14 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
 })
 
 const changeCurrentPassword = asyncHandler(async (req, res) => {
-  const {oldPAssword, newPassword, conformPassword} = req.body;
+  const {oldPassword, newPassword} = req.body;
 
-  if(!(newPassword === conformPassword)) {
-    throw new ApiError(201, "Password is not conform");
-  }
+  // if(!(newPassword === conformPassword)) {
+  //   throw new ApiError(201, "Password is not conform");
+  // }
 
   const user = await User.findById(req.user?._id);
-  const isPasswordCorrect = await user.isPasswordCorrect(oldPAssword);
+  const isPasswordCorrect = await user.isPasswordCorrect(oldPassword);
 
   if(!isPasswordCorrect) {
     throw new ApiError(400, "Password is incorrect");
@@ -245,7 +245,7 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
   await user.save({validateBeforeSave : false});
 
   return res.status(200).json(
-    new ApiResponse(200, {}, "Password is correct")
+    new ApiResponse(200, {}, "Password change successfully")
   )
 
 })
@@ -271,7 +271,7 @@ const changeUserDetails = asyncHandler(async(req, res) => {
     {
       new : true
     }
-  ).select("-password")
+  ).select("-password -refreshToken")
 
   return res.status(200).json(
     new ApiResponse(200, user, "Account details update successfully")
@@ -289,7 +289,7 @@ const updateAvatar = asyncHandler(async(req, res) => {
     throw new ApiError(400, "Error on while upload time")
   }
   // delete local file
-  fs.unlinkSync(avatarLocalPath);
+  deleteLocalFile(avatarLocalPath);
 
   const user = await User.findByIdAndUpdate(
     req.user?._id,
@@ -319,7 +319,7 @@ const updateCoverImage = asyncHandler(async(req, res) => {
     throw new ApiError(400, "Error on while upload time")
   }
   // delete local file
-  deleteLocalFile(avatarLocalPath);
+  deleteLocalFile(coverImageLocalPath);
 
   const user = await User.findByIdAndUpdate(
     req.user?._id,
