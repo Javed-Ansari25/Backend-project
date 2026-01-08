@@ -1,7 +1,7 @@
-import cloudinary from "cloudinary";
+import { v2 as cloudinary } from "cloudinary";
 import fs from "fs";
 
-const uploadOnCloudinary = async (localFilePath) => {
+const uploadOnCloudinary = async (localFilePath, type) => {
   try {
     if (!localFilePath) return null;
 
@@ -12,8 +12,8 @@ const uploadOnCloudinary = async (localFilePath) => {
     });
 
     const response = await cloudinary.uploader.upload(localFilePath, {
-      folder: "users/avatar",
-      resource_type: "auto",
+      folder: "public/temp",
+      resource_type: type,
     });
 
     fs.unlinkSync(localFilePath);
