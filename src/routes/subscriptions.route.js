@@ -8,18 +8,18 @@ const router = Router();
 router.use(verifyJWT);
 
 // route
-router.post("/toggle/:channelId", toggleSubscription);
+router.route("/toggle/:channelId").post(toggleSubscription);
 
 // Channel subscribers list
-router.get("/c/:channelId/subscribers", getChannelSubscribers);
+router.route("/c/:channelId/subscribers").get(getChannelSubscribers);
 
 // Channel subscriber count
-router.get("/c/:channelId/count", getSubscriberCount);
+router.route("/c/:channelId/count").get(getSubscriberCount);
 
 // Logged-in user subscriptions
-router.get("/my-subscriptions", getUserSubscribedChannels);
+router.route("/my-subscriptions").get(getUserSubscribedChannels);
 
 // Check subscribed or not
-router.get("/check/:channelId", checkUserSubscribed);
+router.route("/check/:channelId").get(checkUserSubscribed);
 
 export default router
