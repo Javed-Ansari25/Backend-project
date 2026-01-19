@@ -204,6 +204,8 @@ const togglePublishStatus = asyncHandler(async (req, res) => {
 
   const video = await Video.findOneAndUpdate(
     { _id: videoId, owner: req.user._id },   // auth + filter
+    
+    // Values ​​are being flipped within the database itself
     [
       {
         $set: {
